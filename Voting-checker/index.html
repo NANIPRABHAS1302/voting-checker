@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Voting Assistant 🇮🇳</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+:root{
+  --bg: linear-gradient(135deg,#ff9933,#ffffff,#138808);
+  --card: rgba(255,255,255,0.2);
+  --text:#222;
+}
+body.dark{
+  --bg: linear-gradient(135deg,#1a1a1a,#2c2c2c,#0d3b1e);
+  --card: rgba(30,30,30,0.6);
+  --text:#f5f5f5;
+}
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.container{
+  width:360px;
+  backdrop-filter: blur(20px);
+  background:var(--card);
+  border-radius:16px;
+  padding:20px;
+}
+input,select,button{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#28a745;
+  color:white;
+  cursor:pointer;
+}
+.bar{height:6px;background:#ddd}
+.fill{height:100%;width:0%;background:#28a745}
+.chat{height:120px;overflow:auto;background:rgba(255,255,255,0.2);padding:5px}
+#map{height:150px;margin-top:10px}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2 id="title">Smart Voting Assistant</h2>
+
+<select onchange="changeLang(this.value)">
+<option value="en">English</option>
+<option value="te">తెలుగు</option>
+<option value="kn">ಕನ್ನಡ</option>
+<option value="ta">தமிழ்</option>
+<option value="ml">മലയാളം</option>
+<option value="hi">हिन्दी</option>
+</select>
+
+<input id="age" placeholder="Enter age">
+
+<button id="voiceBtn" onclick="voice()">🎙 Speak Age</button>
+
+<div style="text-align:left">
+<label><input type="checkbox" id="a"> <span id="aadhaarText">Aadhaar</span></label><br>
+<label><input type="checkbox" id="v"> <span id="voterText">Voter ID</span></label><br>
+<label><input type="checkbox" id="r"> <span id="regText">Registered</span></label>
+</div>
+
+<button id="checkBtn" onclick="check()">Check Eligibility</button> <button id="locBtn" onclick="getLocation()">📍 Locate</button> <button id="darkBtn" onclick="dark()">🌙 Dark Mode</button>
+
+<div id="result"></div>
+<div id="score"></div>
+<div class="bar"><div id="fill" class="fill"></div></div>
+
+<div id="map"></div>
+
+<div class="chat" id="chat"></div>
+<input id="msg" placeholder="Ask about voting...">
+<button id="sendBtn" onclick="send()">Send</button>
+
+</div>
+
+<script>
+let map;
+let lang="en";
+
+const t={
+en:{
+title:"Smart Voting Assistant",
+age:"Enter age",
+aadhaar:"Aadhaar",
+voter:"Voter ID",
+reg:"Registered",
+check:"Check Eligibility",
+loc:"Locate",
+dark:"Dark Mode",
+voice:"Speak Age",
+send:"Send",
+eligible:"Eligible to vote",
+not:"Not eligible",
+ask:"Ask about voting..."
+},
+te:{
+title:"ఓటింగ్ సహాయకుడు",
+age:"వయస్సు నమోదు చేయండి",
+aadhaar:"ఆధార్",
+voter:"ఓటర్ ఐడి",
+reg:"నమోదైంది",
+check:"అర్హత తనిఖీ",
+loc:"లొకేట్",
+dark:"డార్క్ మోడ్",
+voice:"వయస్సు చెప్పండి",
+send:"పంపండి",
+eligible:"ఓటు వేయవచ్చు",
+not:"అర్హత లేదు",
+ask:"ప్రశ్న అడగండి"
+},
+kn:{
+title:"ಮತ ಸಹಾಯಕ",
+age:"ವಯಸ್ಸು ನಮೂದಿಸಿ",
+aadhaar:"ಆಧಾರ್",
+voter:"ಮತದಾರ ಐಡಿ",
+reg:"ನೋಂದಾಯಿತ",
+check:"ಪರಿಶೀಲಿಸಿ",
+loc:"ಸ್ಥಳ",
+dark:"ಡಾರ್ಕ್ ಮೋಡ್",
+voice:"ವಯಸ್ಸು ಹೇಳಿ",
+send:"ಕಳುಹಿಸಿ",
+eligible:"ಮತ ಹಾಕಬಹುದು",
+not:"ಅರ್ಹತೆ ಇಲ್ಲ",
+ask:"ಪ್ರಶ್ನೆ ಕೇಳಿ"
+},
+ta:{
+title:"வாக்கு உதவி",
+age:"வயதை உள்ளிடவும்",
+aadhaar:"ஆதார்",
+voter:"வாக்காளர் அட்டை",
+reg:"பதிவு",
+check:"சரிபார்க்க",
+loc:"இடம்",
+dark:"இருள் நிலை",
+voice:"வயது சொல்லவும்",
+send:"அனுப்பு",
+eligible:"வாக்களிக்கலாம்",
+not:"தகுதி இல்லை",
+ask:"கேள்வி கேளுங்கள்"
+},
+ml:{
+title:"വോട്ടിംഗ് സഹായം",
+age:"വയസ്സ് നൽകുക",
+aadhaar:"ആധാർ",
+voter:"വോട്ടർ ഐഡി",
+reg:"രജിസ്റ്റർ",
+check:"പരിശോധിക്കുക",
+loc:"സ്ഥലം",
+dark:"ഡാർക്ക് മോഡ്",
+voice:"വയസ്സ് പറയുക",
+send:"അയയ്ക്കുക",
+eligible:"വോട്ട് ചെയ്യാം",
+not:"യോഗ്യമല്ല",
+ask:"ചോദിക്കുക"
+},
+hi:{
+title:"मतदान सहायक",
+age:"अपनी उम्र दर्ज करें",
+aadhaar:"आधार",
+voter:"वोटर आईडी",
+reg:"पंजीकृत",
+check:"जांच करें",
+loc:"स्थान",
+dark:"डार्क मोड",
+voice:"उम्र बोलें",
+send:"भेजें",
+eligible:"आप वोट कर सकते हैं",
+not:"योग्य नहीं",
+ask:"प्रश्न पूछें"
+}
+};
+
+function changeLang(l){
+lang=l;
+title.innerText=t[l].title;
+age.placeholder=t[l].age;
+aadhaarText.innerText=t[l].aadhaar;
+voterText.innerText=t[l].voter;
+regText.innerText=t[l].reg;
+checkBtn.innerText=t[l].check;
+locBtn.innerText="📍 "+t[l].loc;
+darkBtn.innerText="🌙 "+t[l].dark;
+voiceBtn.innerText="🎙 "+t[l].voice;
+sendBtn.innerText=t[l].send;
+msg.placeholder=t[l].ask;
+}
+
+function check(){
+let ageVal=age.value;
+let s=0;
+if(ageVal>=18)s++;
+if(a.checked)s++;
+if(v.checked)s++;
+if(r.checked)s++;
+
+score.innerText="Score "+s+"/4";
+fill.style.width=(s/4*100)+"%";
+
+if(s==4){
+result.innerText="✅ "+t[lang].eligible;
+}else{
+result.innerText="❌ "+t[lang].not;
+}
+}
+
+function dark(){document.body.classList.toggle("dark");}
+
+function voice(){
+if(!('webkitSpeechRecognition'in window))return;
+let r=new webkitSpeechRecognition();
+r.onresult=e=>{
+let n=e.results[0][0].transcript.match(/\d+/);
+if(n)age.value=n[0];
+};
+r.start();
+}
+
+function getLocation(){
+navigator.geolocation.getCurrentPosition(pos=>{
+let lat=pos.coords.latitude;
+let lon=pos.coords.longitude;
+
+if(!map){
+map=L.map('map').setView([lat,lon],13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+}
+L.marker([lat,lon]).addTo(map).bindPopup("You are here").openPopup();
+});
+}
+
+function send(){
+let m=msg.value;
+chat.innerHTML+="<div>👤 "+m+"</div>";
+
+let reply="Check age & documents.";
+if(m.includes("age"))reply="Minimum age is 18.";
+if(m.includes("document"))reply="Need Aadhaar & Voter ID.";
+
+chat.innerHTML+="<div>🤖 "+reply+"</div>";
+chat.scrollTop=chat.scrollHeight;
+}
+</script>
+
+</body>
+</html>
