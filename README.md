@@ -20,10 +20,9 @@ A full-stack multilingual Smart Voting Assistant that:
 
 ## Tech Stack
 
-* Frontend: HTML, CSS, JavaScript
-* Backend: Serverless API (Vercel)
-* AI: OpenAI API
-* Maps: OpenStreetMap (Leaflet)
+- Frontend: HTML, CSS, JavaScript
+- Backend: Node.js (Express)
+- Deployment: Vercel + Google Cloud Run
 
 ## Features
 
