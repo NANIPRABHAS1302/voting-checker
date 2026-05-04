@@ -1,2 +1,40 @@
+# Smart Voting Assistant 🇮🇳
+
 ## Live Demo
-https://voting-checker.vercel.app/
+
+https://your-vercel-link.vercel.app
+
+## Problem
+
+Many citizens, especially first-time voters, lack clarity about voting eligibility, documents, and process.
+
+## Solution
+
+A full-stack multilingual Smart Voting Assistant that:
+
+* Checks eligibility
+* Supports multiple Indian languages
+* Uses voice input
+* Provides AI chatbot guidance
+* Shows nearby polling location
+
+## Tech Stack
+
+* Frontend: HTML, CSS, JavaScript
+* Backend: Serverless API (Vercel)
+* AI: OpenAI API
+* Maps: OpenStreetMap (Leaflet)
+
+## Features
+
+*  Multi-language support
+*  Voice input
+*  AI chatbot
+*  Location-based guidance
+*  Dark mode
+
+## Future Scope
+
+* Real election data integration
+* User accounts
+* Mobile app version
